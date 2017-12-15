@@ -140,6 +140,46 @@ self.navigationItem.titleView = label;
 ```objc
 [textField setValue:[UIColor grayColor] forKeyPath:@"placeholderLabel.textColor"];
 ```
+### 代码实现以上三种方法改变占位文字颜色
+
+```objc
+//设置TextField占位文字颜色
+//方法一、设置self.attributedPlaceholder
+    NSMutableDictionary *attribute = [NSMutableDictionary dictionary];
+    attribute[NSForegroundColorAttributeName] = [UIColor whiteColor];
+    NSAttributedString *string = [[NSAttributedString alloc] initWithString:self.placeholder attributes:attribute];
+    self.attributedPlaceholder = string;
+
+//方法二、重写drawPlaceholderInRect 自己定义一个Label加到TextField中
+- (void) drawPlaceholderInRect:(CGRect)rect {
+//    2.1
+    UILabel *label = [[UILabel alloc] init];
+    label.text = self.placeholder;
+    label.textColor = [UIColor whiteColor];
+    CGFloat labelW = rect.size.width;
+    CGSize sizeToFit = [self sizeThatFits:CGSizeMake(labelW, MAXFLOAT)];
+    CGFloat labelH = sizeToFit.height;
+    CGFloat labelY = (rect.height - labelH) * 0.5;
+    label.frame = CGRectMake(0, labelY, labelW, labelH);
+    [textField addSubview:label];
+//    2.2
+    NSMutableDictionary *attribute = [NSMutableDictionary dictionary];
+    attribute[NSForegroundColorAttributeName] = [UIColor whiteColor];
+   attribute[NSFontAttributeName] = self.font;
+    CGRect placeholder;
+    placeholder.size.width = rect.size.width;
+    placeholder.size.height = self.font.lineHeight;
+    placeholder.origin.x = 0;
+    placeholder.origin.y = (rect.size.height - self.font.lineHeight) * 0.5;
+    [self.placeholder drawInRect:placeholder withAttributes:attribute];
+}
+
+//方法三、KVC  修改内部占位文字Label的文字颜色
+    [self setValue:[UIColor whiteColor] forKeyPath:@"placeholderLabel.textColor"];
+}
+```
+
+
 
 ## 如何监听一个控件内部的事件
 - 如果继承自UIControl
