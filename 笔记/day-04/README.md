@@ -140,46 +140,6 @@ self.navigationItem.titleView = label;
 ```objc
 [textField setValue:[UIColor grayColor] forKeyPath:@"placeholderLabel.textColor"];
 ```
-### 代码实现以上三种方法改变占位文字颜色
-
-```objc
-//设置TextField占位文字颜色
-//方法一、设置self.attributedPlaceholder
-    NSMutableDictionary *attribute = [NSMutableDictionary dictionary];
-    attribute[NSForegroundColorAttributeName] = [UIColor whiteColor];
-    NSAttributedString *string = [[NSAttributedString alloc] initWithString:self.placeholder attributes:attribute];
-    self.attributedPlaceholder = string;
-
-//方法二、重写drawPlaceholderInRect 自己定义一个Label加到TextField中
-- (void) drawPlaceholderInRect:(CGRect)rect {
-//    2.1
-    UILabel *label = [[UILabel alloc] init];
-    label.text = self.placeholder;
-    label.textColor = [UIColor whiteColor];
-    CGFloat labelW = rect.size.width;
-    CGSize sizeToFit = [self sizeThatFits:CGSizeMake(labelW, MAXFLOAT)];
-    CGFloat labelH = sizeToFit.height;
-    CGFloat labelY = (rect.height - labelH) * 0.5;
-    label.frame = CGRectMake(0, labelY, labelW, labelH);
-    [textField addSubview:label];
-//    2.2
-    NSMutableDictionary *attribute = [NSMutableDictionary dictionary];
-    attribute[NSForegroundColorAttributeName] = [UIColor whiteColor];
-   attribute[NSFontAttributeName] = self.font;
-    CGRect placeholder;
-    placeholder.size.width = rect.size.width;
-    placeholder.size.height = self.font.lineHeight;
-    placeholder.origin.x = 0;
-    placeholder.origin.y = (rect.size.height - self.font.lineHeight) * 0.5;
-    [self.placeholder drawInRect:placeholder withAttributes:attribute];
-}
-
-//方法三、KVC  修改内部占位文字Label的文字颜色
-    [self setValue:[UIColor whiteColor] forKeyPath:@"placeholderLabel.textColor"];
-}
-```
-
-
 
 ## 如何监听一个控件内部的事件
 - 如果继承自UIControl
@@ -331,11 +291,12 @@ id observer = [[NSNotificationCenter defaultCenter] addObserverForName:UITextFie
 ```
 
 ### 其他
+- 如果在线程A发出通知，那么就会在线程A中接收通知
+
 ```objc
 dispatch_async(dispatch_get_global_queue(0, 0), ^{
-    // 因为是在子线程注册了通知监听器, 所以beginEditing和endEditing会在子线程中执行
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(beginEditing) name:UITextFieldTextDidBeginEditingNotification object:self];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(endEditing) name:UITextFieldTextDidEndEditingNotification object:self];
+    // 系统会在子线程中处理test这个通知
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"test" object:nil];
 });
 ```
 
